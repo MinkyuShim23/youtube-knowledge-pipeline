@@ -46,7 +46,9 @@ def metadata_pass(url, workdir, langs, archive, sleep, want_subs):
     if want_subs:
         cmd += ["--write-subs", "--write-auto-subs", "--sub-langs", langs, "--convert-subs", "srt"]
     if archive:
-        cmd += ["--download-archive", str(archive)]
+        # --force-write-archive is REQUIRED: with --skip-download, yt-dlp won't record the
+        # archive on its own, so dedup/resume silently breaks without this.
+        cmd += ["--download-archive", str(archive), "--force-write-archive"]
     cmd.append(url)
     sh(cmd)
 
