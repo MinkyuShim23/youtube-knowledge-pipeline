@@ -1,0 +1,19 @@
+1
+00:00:00,000 --> 00:00:03,000
+The first principle is simple: make something people want.
+
+2
+00:00:03,000 --> 00:00:06,500
+make something people want. If nobody wants it,
+
+3
+00:00:06,500 --> 00:00:10,000
+If nobody wants it, the best marketing in the world won't save you.
+
+4
+00:00:10,000 --> 00:00:14,000
+So before you scale, talk to your users and find the real problem.
+
+5
+00:00:14,000 --> 00:00:18,000
+find the real problem, then build the smallest thing that solves it.

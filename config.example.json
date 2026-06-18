@@ -1,0 +1,7 @@
+{
+  "vault": "/Users/minkyushim/Library/CloudStorage/OneDrive-Personal/Desktop/04_Technical Brain",
+  "workdir": "work",
+  "sub_langs": "en.*,ko.*",
+  "whisper_model": "mlx-community/whisper-large-v3-turbo",
+  "default_domains": "creator-wisdom"
+}
