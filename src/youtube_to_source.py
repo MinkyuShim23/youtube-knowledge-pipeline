@@ -223,12 +223,11 @@ def main():
     note = f"""---
 type: source
 media: youtube
-status: to-distill
-title: {full_title}
-updated: {today}
-domains: {domains_yaml}
-tags: {tags}
 aliases: []
+domains: {domains_yaml}
+status: to-distill
+source: {meta.get('url', '')}
+updated: {today}
 ---
 
 # {full_title}
