@@ -1,73 +1,109 @@
 # YouTube Knowledge Pipeline
 
-Turn videos from the creators / KOLs I follow into durable notes in my **Technical Brain** Obsidian vault — minimal time watching, maximum signal kept.
+Turn videos from the creators I follow into durable notes in my **Technical Brain** Obsidian
+vault — minimal time watching, maximum signal kept. Detection + alerting run 24/7 on my
+always-on server; the residential-IP-sensitive capture + distillation run on my Mac.
 
-Reproducible and **local-first**: extraction runs on my Mac (residential IP), because YouTube blocks datacenter IPs and now gates some subtitles behind PO tokens. Everything after the transcript is automatic.
+**Two hosts, by necessity:** YouTube bot-walls datacenter IPs for transcripts/audio, and the
+vault lives on the Mac — so the OCI server can only *detect*, and the Mac does the *fetching +
+writing*. An approval gate sits in between: nothing is captured until I approve it.
 
-## What it does (two speeds)
+## Architecture
 
 ```
-channel / video URL
-   │  fetch.py   (auto-detect: captions → else audio → Whisper)
-   ▼
-work/<creator>/…           info.json + .srt per video
-   │  batch.py  →  youtube_to_source.py   (clean + file)
-   ▼
-<vault>/00_Resources/      one `type: source` note per video (transcript + TL;DR)
-   │  you flag the keepers, then Claude distils
-   ▼
-<vault>/02_Notes/          atomic idea-notes, linked into the Creator Wisdom MOC
+creator uploads
+  └─[OCI] YouTube Upload Watch  (hourly, polls RSS — datacenter-safe)
+       └─ 📹 Telegram alert  →  I reply  `yt approve <id>`  (or 👍)
+            └─[OCI] youtube_approve.py  →  capture queue (JSON on the server)
+                 └─[Mac] launchd drainer (auto_capture.py, on wake / every 30m):
+                      fetch.py       →  Source note    in 00_Resources/
+                      claude distil  →  atomic notes   in 02_Notes/  + Creator Wisdom MOC
+                      clear queue
 ```
 
-- **Capture** (cheap, whole-channel) — `fetch.py` pulls captions; if a video has none it grabs audio and transcribes with Whisper. `batch.py` cleans each transcript (dedupes rolling captions → ~1-min timestamped paragraphs) and writes a Source note.
-- **Triage** — you pick which videos deserve deep notes.
-- **Promote** — Claude distils flagged sources into atomic English notes (one idea each), attributing opinions and linking back. (The *processing gate*: a transcript stays a `source` note until reworded into a `note`.)
+- **Detect + alarm (OCI / Hermes):** the `YouTube Upload Watch` cron polls each creator's RSS
+  feed (`youtube.com/feeds/videos.xml?channel_id=…`, a plain XML endpoint that is *not*
+  bot-walled from a datacenter IP) and Telegrams only on genuinely new uploads, approve command
+  inline.
+- **Approve (gate):** I reply `yt approve <id>`; Hermes runs `youtube_approve.py`, which appends
+  the video to a capture queue. Nothing is fetched until I approve.
+- **Capture + distil (Mac):** a `launchd` agent drains the queue — captures the transcript, then
+  distils atomic notes via headless Claude, then clears the queue. **Sleep-tolerant:** `launchd`
+  runs a missed job when the Mac next wakes, and an archive ledger makes capture idempotent, so a
+  Mac that's often asleep loses nothing — it just catches up.
 
-## Setup (one-time, macOS)
+## The pieces (two repos)
+
+| Where | File | Role |
+|---|---|---|
+| **Mac** (this repo) | `auto_capture.py` | **the drainer** — reads the OCI queue, captures + distils, clears it (what `launchd` runs) |
+| | `src/fetch.py` | yt-dlp fetch (captions → else audio→Whisper); channel-aware, resumable |
+| | `src/batch.py` | fetched transcripts → `type: source` notes in the vault |
+| | `src/youtube_to_source.py` | cleaner: dedupe rolling captions → ~1-min timestamped paragraphs |
+| | `pyproject.toml` / `uv.lock` | uv project (yt-dlp pinned) |
+| **OCI** (`oci-free-arm-vm` repo) | `automations/scripts/youtube_upload_watch.py` | RSS watcher → Telegram alert (Hermes `no_agent` cron) |
+| | `automations/scripts/youtube_approve.py` | approval → capture queue |
+| | `automations/scripts/youtube_creators.json` | creators to watch (machine copy of `creators.md`) |
+| | `automations/scripts/youtube_upload_watch.SETUP.md` | watcher ops doc |
+
+State lives on the server: queue `~/.hermes/state/youtube_capture_queue.json`, seen-set
+`~/.hermes/state/youtube_upload_seen.json`. The agent's approval protocol is in `~/.hermes/SOUL.md`.
+
+## Day-to-day
+
+1. Creator uploads → within the hour, a 📹 Telegram alert.
+2. Reply `yt approve <id>` (the alert shows the exact command) — or 👍 / "approve".
+3. Next time the Mac is awake, the Source note + atomic notes appear in the vault. Done.
+
+## Setup (one-time, macOS) — uv
 
 ```bash
-brew install yt-dlp ffmpeg
-python3 -m pip install -r requirements.txt    # yt-dlp + mlx-whisper (Apple-Silicon Whisper)
-cp config.example.json config.json            # then edit the vault path if needed
+brew install ffmpeg deno          # system CLIs (deno solves YouTube's JS challenge)
+uv sync                           # yt-dlp + lockfile (uv-managed — never pip/conda/venv directly)
 ```
 
-## Use
+**Headless Claude token** (for unattended distil — a long-lived token, NOT the interactive login):
+```bash
+claude setup-token                # copy the sk-ant-oat01-… it prints
+mkdir -p ~/.config/youtube-knowledge
+printf 'CLAUDE_CODE_OAUTH_TOKEN=%s\n' 'PASTE_TOKEN' > ~/.config/youtube-knowledge/claude.env
+chmod 600 ~/.config/youtube-knowledge/claude.env
+```
+
+**Install the drainer (launchd):**
+```bash
+launchctl load -w ~/Library/LaunchAgents/com.minkyu.youtube-knowledge-drainer.plist
+```
+
+The OCI watcher + approval job register separately — see the SETUP doc in `oci-free-arm-vm`.
+After editing the server's `SOUL.md`, restart Hermes: `systemctl --user restart hermes-gateway`.
+
+## Operate
 
 ```bash
-# whole channel, resumable (re-run later and it grabs only new uploads)
-make capture URL="https://www.youtube.com/@edmundyong/videos"
-
-# …or step by step
-python3 src/fetch.py "<url>" --workdir work --archive work/archive.txt
-python3 src/batch.py --workdir work --vault "<vault>" --domains creator-wisdom
+make drain        # drain the approval queue now (exactly what launchd runs)
+make capture URL="https://www.youtube.com/@edmundyong/videos"   # whole channel, resumable (bypasses the gate)
+make demo         # offline: prove the cleaner on a bundled sample transcript
 ```
-Then ask Claude: *"distil idea-notes from the new Source notes."*
 
-For a Korean channel you want at Whisper quality from the start, add `--force-whisper` to `fetch.py`.
+Everything runs through `uv run` (see the Makefile). The drainer degrades safely: with no token
+it still captures raw Source notes and flags them distil-pending — never a silent failure.
 
-## Demo (no network)
-
-Proves the construction pipeline on a bundled sample transcript:
-
-```bash
-make demo
-```
-Cleans `demo/sample_transcript.srt` (note the rolling-caption duplicates) and writes a Source note into `demo/_demo_vault/00_Resources/`, then prints it.
-
-## Layout
-
-| Path | What |
-|---|---|
-| `src/fetch.py` | yt-dlp auto-detect fetch (captions → else audio → Whisper); channel-aware, resumable |
-| `src/batch.py` | turns fetched transcripts into Source notes in the vault |
-| `src/youtube_to_source.py` | the cleaner: dedupe rolling captions → ~1-min timestamped paragraphs → `type: source` note |
-| `creators.md` | creator registry (per-creator defaults) |
-| `config.example.json` | vault path + defaults |
-| `demo/` | sample transcript + the `make demo` target |
+**Add a creator** (no code change):
+1. Resolve the channel id: `yt-dlp --print "%(channel_id)s" "<any video URL>"`.
+2. Add a row to `oci-free-arm-vm/automations/scripts/youtube_creators.json`
+   (`{ "name": "...", "channel_id": "UC..." }`) and redeploy it to `~/.hermes/youtube_creators.json`.
+3. Keep `creators.md` here in sync. The next watcher run **bootstraps the new creator silently**
+   (records current uploads as seen — no historical spam), then alerts only on new ones.
 
 ## Notes & limits (2026)
 
-- Extraction must run on a **residential IP** (your Mac), not a server or automation sandbox.
-- If you hit *"Sign in to confirm you're not a bot"*, add `--cookies-from-browser safari` to yt-dlp, or install a PO-token provider plugin. Keep `yt-dlp` updated (`brew upgrade yt-dlp`) — it's a cat-and-mouse with YouTube.
-- Korean auto-captions are weak; `fetch.py` falls back to Whisper `large-v3` when captions are missing, or use `--force-whisper` for a whole channel.
-- The vault is knowledge-only; this repo is the tooling. House style → the vault's `99_Misc/02_Meta/Conventions.md`; system map → `Learning & Study/Second-Brain-Operating-Model.md`.
+- Extraction must run on a **residential IP** (the Mac), never the server — the server only detects (RSS).
+- The Claude token expires; if distil starts failing, re-run `claude setup-token` and update
+  `~/.config/youtube-knowledge/claude.env`. Capture is unaffected.
+- *"Sign in to confirm you're not a bot"* → add `--cookies-from-browser safari` to yt-dlp, and keep
+  it current: `uv lock --upgrade-package yt-dlp` (it's cat-and-mouse with YouTube).
+- Korean auto-captions are weak; `fetch.py` falls back to Whisper, or use `--force-whisper`.
+  mlx-whisper is the optional extra: `uv sync --extra whisper`.
+- The vault is knowledge-only; this repo is the tooling. House style → vault
+  `99_Misc/02_Meta/Conventions.md`; system map → `Learning & Study/Second-Brain-Operating-Model.md`.
