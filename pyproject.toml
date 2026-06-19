@@ -1,0 +1,15 @@
+[project]
+name = "youtube-knowledge-pipeline"
+version = "0.1.0"
+description = "Capture + distill YouTube creator transcripts into the Technical Brain (residential-IP fetch on the Mac)."
+requires-python = ">=3.10"
+dependencies = [
+    "yt-dlp>=2025.1",
+]
+
+[project.optional-dependencies]
+# Apple-Silicon Whisper fallback for caption-less / Korean videos.
+whisper = ["mlx-whisper; platform_system == 'Darwin'"]
+
+# System CLIs (NOT pip-managed): ffmpeg + deno  ->  brew install ffmpeg deno
+# Run everything with `uv run` (e.g. `uv run python src/fetch.py ...`, `uv run auto_capture.py`).

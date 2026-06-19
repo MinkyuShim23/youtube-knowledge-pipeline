@@ -34,7 +34,9 @@ LOG = REPO / "auto_capture.log"
 LOCK = Path("/tmp/youtube_auto_capture.lock")
 
 # launchd gives a minimal PATH; make sure brew tools + claude resolve.
-os.environ["PATH"] = f"/opt/homebrew/bin:{HOME}/.local/bin:" + os.environ.get("PATH", "/usr/bin:/bin")
+# Run under `uv run` (launchd does this) so sys.executable + venv yt-dlp resolve.
+# Append brew + ~/.local/bin for the system CLIs (deno/ffmpeg/claude) without shadowing the venv.
+os.environ["PATH"] = os.environ.get("PATH", "/usr/bin:/bin") + f":/opt/homebrew/bin:{HOME}/.local/bin"
 
 
 def log(msg: str) -> None:
@@ -98,12 +100,12 @@ def capture(url: str) -> list[Path]:
     before = set(RESOURCES.glob("*.md")) if RESOURCES.exists() else set()
     tmp = Path(tempfile.mkdtemp(prefix="ytcap_"))
     try:
-        r1 = sh(["python3", str(REPO / "src" / "fetch.py"), url, "--workdir", str(tmp),
+        r1 = sh([sys.executable, str(REPO / "src" / "fetch.py"), url, "--workdir", str(tmp),
                  "--langs", "en.*,ko.*", "--archive", str(ARCHIVE), "--no-whisper"],
                 timeout=600, cwd=REPO)
         if r1.returncode != 0:
             log(f"  fetch rc={r1.returncode}: {(r1.stderr or r1.stdout)[-300:]}")
-        r2 = sh(["python3", str(REPO / "src" / "batch.py"), "--workdir", str(tmp),
+        r2 = sh([sys.executable, str(REPO / "src" / "batch.py"), "--workdir", str(tmp),
                  "--vault", str(VAULT), "--domains", "creator-wisdom"], timeout=300, cwd=REPO)
         if r2.returncode != 0:
             log(f"  batch rc={r2.returncode}: {(r2.stderr or r2.stdout)[-300:]}")
