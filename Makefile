@@ -2,7 +2,8 @@
 # Override on the command line, e.g.  make capture URL="https://www.youtube.com/@edmundyong/videos"
 
 VAULT ?= /Users/minkyushim/Library/CloudStorage/OneDrive-Personal/Desktop/04_Technical Brain
-WORK  ?= work
+WORK    ?= work               # scratch transcripts (gitignored, safe to delete)
+ARCHIVE ?= state/archive.txt   # persistent capture-dedup ledger (kept)
 LANGS ?= en.*,ko.*
 WHISPER_MODEL ?= mlx-community/whisper-large-v3-turbo
 DOMAINS ?= creator-wisdom
@@ -16,8 +17,9 @@ setup:
 
 # Fetch transcripts for a URL (video / playlist / channel). Auto-detects captions vs audio->Whisper.
 fetch:
+	@mkdir -p "$(dir $(ARCHIVE))"
 	uv run python src/fetch.py "$(URL)" --workdir "$(WORK)" --langs "$(LANGS)" \
-	  --whisper-model "$(WHISPER_MODEL)" --archive "$(WORK)/archive.txt"
+	  --whisper-model "$(WHISPER_MODEL)" --archive "$(ARCHIVE)"
 
 # Turn fetched transcripts into Source notes in the vault.
 notes:
@@ -37,5 +39,6 @@ demo:
 	@echo "----- generated Source note -----"
 	@cat "demo/_demo_vault/00_Resources/Demo Creator — How I think about building products.md"
 
+# Remove scratch transcripts + demo output (keeps state/archive.txt).
 clean:
 	rm -rf "$(WORK)" demo/_demo_vault

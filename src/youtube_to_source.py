@@ -18,7 +18,7 @@ Stdlib only — runs anywhere with Python 3.8+.
 
 Usage
 -----
-  python3 youtube_to_source.py \
+  uv run youtube_to_source.py \
       --meta meta.json \
       --transcript raw.txt \
       [--vault "/Users/.../04 Technical Brain"] \

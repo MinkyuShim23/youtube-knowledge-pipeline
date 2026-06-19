@@ -1,9 +1,0 @@
-# Python dependencies for the YouTube Knowledge Pipeline.
-# System dependency (install separately): ffmpeg   ->  brew install ffmpeg
-#
-# Extraction must run on a residential IP (your Mac), not a server/sandbox.
-
-yt-dlp>=2025.1                         # downloader / transcript + metadata extractor (keep updated!)
-mlx-whisper; platform_system == "Darwin"   # Apple-Silicon Whisper fallback for caption-less / Korean videos
-
-# The cleaner (youtube_to_source.py) and batch/fetch wrappers are pure standard library.

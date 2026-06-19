@@ -70,7 +70,7 @@ def whisper_pass(workdir, whisper_model, lang):
         return
     if not has("mlx_whisper"):
         print(f"!! {len(pending)} video(s) have no captions and mlx_whisper is not installed — "
-              f"skipping. Install with: pip install mlx-whisper", file=sys.stderr)
+              f"skipping. Install with: uv sync --extra whisper", file=sys.stderr)
         return
     for info in pending:
         meta = json.loads(info.read_text(encoding="utf-8"))
@@ -115,7 +115,7 @@ def main():
     metadata_pass(a.url, workdir, a.langs, archive, a.sleep, want_subs=not a.force_whisper)
     if not a.no_whisper:
         whisper_pass(workdir, a.whisper_model, a.lang)
-    print(f"\nfetch complete -> {workdir}\nnext: python3 src/batch.py --workdir {a.workdir}")
+    print(f"\nfetch complete -> {workdir}\nnext: uv run src/batch.py --workdir {a.workdir}")
 
 
 if __name__ == "__main__":

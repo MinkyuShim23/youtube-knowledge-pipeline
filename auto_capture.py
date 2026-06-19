@@ -29,8 +29,8 @@ OCI = "free-arm-vm"
 QUEUE_REMOTE = "/home/ubuntu/.hermes/state/youtube_capture_queue.json"
 TOKEN_ENV = HOME / ".config" / "youtube-knowledge" / "claude.env"
 CLAUDE = HOME / ".local" / "bin" / "claude"
-ARCHIVE = REPO / "work" / "archive.txt"
-LOG = REPO / "auto_capture.log"
+ARCHIVE = REPO / "state" / "archive.txt"          # persistent capture-dedup ledger
+LOG = Path.home() / "Library" / "Logs" / "youtube-knowledge" / "auto_capture.log"
 LOCK = Path("/tmp/youtube_auto_capture.lock")
 
 # launchd gives a minimal PATH; make sure brew tools + claude resolve.
