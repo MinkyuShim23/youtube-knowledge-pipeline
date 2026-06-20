@@ -234,6 +234,7 @@ def main():
 type: source
 media: youtube
 aliases: []
+tags: {tags}
 domains: {domains_yaml}
 status: to-distill
 source: {meta.get("url", "")}
