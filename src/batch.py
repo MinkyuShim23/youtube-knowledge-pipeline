@@ -7,6 +7,7 @@ run youtube_to_source.py (the cleaner) to write the Source note into <vault>/00_
 
 Pair with fetch.py's --archive so you never re-fetch. See ../README.md.
 """
+
 import argparse
 import json
 import re
@@ -76,8 +77,16 @@ def main():
         meta_path = info.with_name(info.name.replace(".info.json", ".meta.json"))
         meta_path.write_text(json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8")
 
-        cmd = [sys.executable, str(HERE / "youtube_to_source.py"),
-               "--meta", str(meta_path), "--transcript", str(srt), "--domains", a.domains]
+        cmd = [
+            sys.executable,
+            str(HERE / "youtube_to_source.py"),
+            "--meta",
+            str(meta_path),
+            "--transcript",
+            str(srt),
+            "--domains",
+            a.domains,
+        ]
         if a.tags:
             cmd += ["--tags", a.tags]
         if a.vault:
@@ -87,8 +96,10 @@ def main():
         if subprocess.run(cmd).returncode == 0:
             made += 1
 
-    print(f"\n{made} Source note(s) written. "
-          f"Next: ask Claude to distil idea-notes from the new Source notes.")
+    print(
+        f"\n{made} Source note(s) written. "
+        f"Next: ask Claude to distil idea-notes from the new Source notes."
+    )
 
 
 if __name__ == "__main__":

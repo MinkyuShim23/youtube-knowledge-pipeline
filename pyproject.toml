@@ -11,5 +11,16 @@ dependencies = [
 # Apple-Silicon Whisper fallback for caption-less / Korean videos.
 whisper = ["mlx-whisper; platform_system == 'Darwin'"]
 
+[dependency-groups]
+dev = ["ruff>=0.11", "pre-commit>=4"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+# Clean autofixable baseline (ruff default E-subset + pyflakes + import sort).
+# Expand with "UP","B","SIM" when you want stricter linting.
+select = ["E4", "E7", "E9", "F", "I"]
+
 # System CLIs (NOT pip-managed): ffmpeg + deno  ->  brew install ffmpeg deno
 # Run everything with `uv run` (e.g. `uv run python src/fetch.py ...`, `uv run auto_capture.py`).
