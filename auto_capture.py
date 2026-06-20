@@ -103,7 +103,7 @@ Source note to distill: 00_Resources/{note}
 
 Steps:
 1. Read 00_Resources/{note} (a transcript, possibly with an empty TL;DR/takeaways scaffold).
-2. Read 99_Misc/01_Templates/Concept note.md for the atomic-note format, and skim existing \
+2. Read 99_Misc/01_Templates/Note.md for the atomic-note format, and skim existing \
 filenames in 02_Notes/ so you EXTEND/LINK rather than duplicate an existing concept.
 3. Create 2-5 ATOMIC concept notes in 02_Notes/ — each one durable, reusable idea (a mental \
 model, principle, or tactic), NOT a video summary. English. Use the template's frontmatter \

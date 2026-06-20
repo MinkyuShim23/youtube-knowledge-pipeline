@@ -22,7 +22,6 @@ Usage
       --meta meta.json \
       --transcript raw.txt \
       [--vault "/Users/.../04 Technical Brain"] \
-      [--tags entrepreneurship,startups] \
       [--interval 60] [--tldr "..."] [--dry-run]
 
 meta.json keys (all optional strings; missing -> left blank):
@@ -201,7 +200,6 @@ def main():
         "--transcript", required=True, help="path to raw transcript (vtt/srt/panel/plain)"
     )
     ap.add_argument("--vault", default=DEFAULT_VAULT)
-    ap.add_argument("--tags", default="", help="extra comma-separated tags")
     ap.add_argument("--domains", default="", help="comma-separated domains, e.g. creator-wisdom")
     ap.add_argument("--interval", type=int, default=60, help="seconds per transcript paragraph")
     ap.add_argument("--tldr", default="")
@@ -222,8 +220,8 @@ def main():
     )
     today = datetime.date.today().isoformat()
 
-    extra = [t.strip() for t in a.tags.split(",") if t.strip()]
-    tags = "[" + ", ".join(["source", "youtube"] + extra) + "]"
+    # The Technical Brain is deliberately tag-free — `domains` + MOCs + links do the
+    # organizing (see the vault Conventions). Do NOT add a `tags:` frontmatter field here.
     doms = [d.strip() for d in a.domains.split(",") if d.strip()]
     domains_yaml = "[" + ", ".join(doms) + "]"
 
@@ -234,7 +232,6 @@ def main():
 type: source
 media: youtube
 aliases: []
-tags: {tags}
 domains: {domains_yaml}
 status: to-distill
 source: {meta.get("url", "")}

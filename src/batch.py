@@ -48,7 +48,6 @@ def main():
     ap.add_argument("--workdir", default="work")
     ap.add_argument("--vault", default="", help="override vault path (else the cleaner's default)")
     ap.add_argument("--domains", default="creator-wisdom")
-    ap.add_argument("--tags", default="")
     ap.add_argument("--dry-run", action="store_true")
     a = ap.parse_args()
 
@@ -87,8 +86,6 @@ def main():
             "--domains",
             a.domains,
         ]
-        if a.tags:
-            cmd += ["--tags", a.tags]
         if a.vault:
             cmd += ["--vault", a.vault]
         if a.dry_run:
