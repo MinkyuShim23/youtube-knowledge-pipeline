@@ -2,8 +2,10 @@
 # Override on the command line, e.g.  make capture URL="https://www.youtube.com/@edmundyong/videos"
 
 VAULT ?= /Users/minkyushim/Library/CloudStorage/OneDrive-Personal/Desktop/04_Technical Brain
-WORK    ?= work               # scratch transcripts (gitignored, safe to delete)
-ARCHIVE ?= state/archive.txt   # persistent capture-dedup ledger (kept)
+# scratch transcripts (gitignored, safe to delete)
+WORK ?= work
+# persistent capture-dedup ledger (kept)
+ARCHIVE ?= state/archive.txt
 LANGS ?= en.*,ko.*
 WHISPER_MODEL ?= mlx-community/whisper-large-v3-turbo
 DOMAINS ?= creator-wisdom
