@@ -37,7 +37,7 @@ drain:
 # Self-contained demo (no network): sample transcript -> Source note in demo/_demo_vault, then print it.
 demo:
 	uv run python src/youtube_to_source.py --meta demo/sample_meta.json --transcript demo/sample_transcript.srt \
-	  --domains "$(DOMAINS)" --tags entrepreneurship --vault demo/_demo_vault
+	  --domains "$(DOMAINS)" --vault demo/_demo_vault
 	@echo "----- generated Source note -----"
 	@cat "demo/_demo_vault/00_Resources/Demo Creator — How I think about building products.md"
 

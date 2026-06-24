@@ -22,9 +22,10 @@ creator uploads
 ```
 
 - **Detect + alarm (OCI / Hermes):** the `YouTube Upload Watch` cron polls each creator's RSS
-  feed (`youtube.com/feeds/videos.xml?channel_id=…`, a plain XML endpoint that is *not*
-  bot-walled from a datacenter IP) and Telegrams only on genuinely new uploads, approve command
-  inline.
+  feed (`youtube.com/feeds/videos.xml?channel_id=…`, a plain XML endpoint that is *usually*
+  datacenter-safe) and Telegrams only on genuinely new uploads, approve command inline. The watcher
+  uses retry/backoff and only reports persistent feed failures, because YouTube RSS can return
+  transient 404/500 responses from OCI/datacenter paths even when the channel ID is correct.
 - **Approve (gate):** I reply `yt approve <id>`; Hermes runs `youtube_approve.py`, which appends
   the video to a capture queue. Nothing is fetched until I approve.
 - **Capture + distil (Mac):** a `launchd` agent drains the queue — captures the transcript, then
@@ -88,6 +89,26 @@ make demo         # offline: prove the cleaner on a bundled sample transcript
 
 Everything runs through `uv run` (see the Makefile). The drainer degrades safely: with no token
 it still captures raw Source notes and flags them distil-pending — never a silent failure.
+
+## Watcher ops / troubleshooting
+
+On the OCI host:
+
+```bash
+python3 ~/.hermes/scripts/youtube_upload_watch.py --discover   # verify each RSS feed + latest videos
+python3 ~/.hermes/scripts/youtube_upload_watch.py --dry-run    # render any pending alert without state writes
+python3 ~/.hermes/scripts/youtube_upload_watch.py              # normal silent run when no new upload/problem
+tail -n 50 ~/.hermes/logs/youtube_upload_watch.log
+```
+
+RSS failure policy (2026-06-24):
+
+- Retry each feed with short backoff before counting a failure.
+- If **all watched feeds fail in the same tick**, classify it as shared YouTube RSS edge/OCI-egress trouble, not N broken creators; alert only after **6 consecutive all-feed failed hourly runs**.
+- If only one creator/feed fails while others succeed, alert that creator after **4 consecutive failed hourly runs**.
+- Throttle repeat failure alerts to **24h**.
+- Clear `errors` / `error_counts` / shared failure state immediately after a successful fetch.
+- Treat one-off `HTTP 404` / `HTTP 500` as YouTube edge noise unless `--discover` keeps failing.
 
 **Add a creator** (no code change):
 1. Resolve the channel id: `yt-dlp --print "%(channel_id)s" "<any video URL>"`.
