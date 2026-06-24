@@ -6,7 +6,7 @@ add a row per creator. Claude uses `default tags` and `notes language` when proc
 | Creator | Channel | Domain | Default tags | Source lang | Notes language |
 |---|---|---|---|---|---|
 | Edmund Yong | https://www.youtube.com/@edmundyong | Startups, indie-hacking, building | `entrepreneurship`, `startups` | English | English |
-| 엉드루 | _confirm channel URL_ | _confirm — wisdom / self-development?_ | `self-development` | Korean | English (+ key Korean quotes) |
+| 엉드루 | https://www.youtube.com/@엉드루 | Finance, investing, quant | `finance`, `quant` | Korean | English (+ key Korean quotes) |
 
 ## Notes
 - **엉드루** — needs confirmation. A search surfaced the entertainment/gaming duo
