@@ -1,7 +1,7 @@
 # YouTube Knowledge Pipeline — common tasks (uv-managed).
 # Override on the command line, e.g.  make capture URL="https://www.youtube.com/@edmundyong/videos"
 
-VAULT ?= /Users/minkyushim/Library/CloudStorage/OneDrive-Personal/Desktop/04_Technical Brain
+VAULT ?= /Users/minkyushim/Library/Mobile Documents/iCloud~md~obsidian/Documents/Technical Brain
 # scratch transcripts (gitignored, safe to delete)
 WORK ?= work
 # persistent capture-dedup ledger (kept)

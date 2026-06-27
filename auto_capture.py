@@ -24,7 +24,9 @@ from pathlib import Path
 
 HOME = Path.home()
 REPO = HOME / "Projects" / "personal" / "youtube-knowledge-pipeline"
-VAULT = Path("/Users/minkyushim/Library/CloudStorage/OneDrive-Personal/Desktop/04_Technical Brain")
+VAULT = Path(
+    "/Users/minkyushim/Library/Mobile Documents/iCloud~md~obsidian/Documents/Technical Brain"
+)
 RESOURCES = VAULT / "00_Resources"
 OCI = "free-arm-vm"
 QUEUE_REMOTE = "/home/ubuntu/.hermes/state/youtube_capture_queue.json"

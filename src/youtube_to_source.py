@@ -21,7 +21,7 @@ Usage
   uv run youtube_to_source.py \
       --meta meta.json \
       --transcript raw.txt \
-      [--vault "/Users/.../04 Technical Brain"] \
+      [--vault "/Users/.../Technical Brain"] \
       [--interval 60] [--tldr "..."] [--dry-run]
 
 meta.json keys (all optional strings; missing -> left blank):
@@ -35,7 +35,7 @@ import re
 from pathlib import Path
 
 DEFAULT_VAULT = (
-    "/Users/minkyushim/Library/CloudStorage/OneDrive-Personal/Desktop/04_Technical Brain"
+    "/Users/minkyushim/Library/Mobile Documents/iCloud~md~obsidian/Documents/Technical Brain"
 )
 RESOURCES = "00_Resources"
 
